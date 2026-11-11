@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+  <title>AgroCampo — Planejamento e Decisão Agrícola</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- Alerta de Sem Internet (Fonte >= 16px) -->
+  <div class="offline-banner" id="offlineBanner" role="alert">
+    <span><strong>Sem internet:</strong> Você está desconectado. Conecte-se à rede para salvar registros no banco em nuvem.</span>
+    <button type="button" class="btn btn-outline btn-sm" onclick="toggleOfflineSimulation()">Restaurar Conexão</button>
+  </div>
+
+  <!-- ========================================================================
+       TELA INICIAL: LOGIN, CADASTRO E BOTÃO DE FEEDBACK/AJUDA (100% CLARA)
+       ======================================================================== -->
+  <div class="auth-page" id="authPage">
+    <header class="auth-header">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/>
+            <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>
+          </svg>
+        </div>
+        <div>
+          <span class="brand-name">AgroCampo</span>
+          <span class="brand-tagline">Apoio à Decisão no Plantio, Desenvolvimento e Colheita</span>
+        </div>
+      </div>
+
+      <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+        <button type="button" class="btn btn-outline btn-sm sim-offline-btn" onclick="toggleOfflineSimulation()">
+          Testar "Sem Internet"
+        </button>
+        <button type="button" class="btn btn-help" onclick="openFeedbackModal()">
+          Feedback / Ajuda
+        </button>
+      </div>
+    </header>
+
+    <main class="auth-container">
+      <div class="auth-grid">
+        <div class="auth-intro">
+          <div>
+            <h1>Planeje o plantio, acompanhe a lavoura e colha no momento certo</h1>
+            <p>
+              Registre os dados de plantio, umidade e clima da sua área de cultivo para receber recomendações técnicas claras e reduzir riscos de perdas na produção.
+            </p>
+
+            <ul class="feature-list">
+              <li class="feature-item">
+                <div class="feature-dot">1</div>
+                <div>
+                  <strong>Período Adequado para Plantio</strong>
+                  <span>Análise automática de umidade do solo, clima local e características da cultura.</span>
+                </div>
+              </li>
+              <li class="feature-item">
+                <div class="feature-dot">2</div>
+                <div>
+                  <strong>Alertas de Risco e Padrões de Umidade</strong>
+                  <span>Avisos visuais imediatos quando a umidade ou o clima oferecem risco para a fase da planta.</span>
+                </div>
+              </li>
+              <li class="feature-item">
+                <div class="feature-dot">3</div>
+                <div>
+                  <strong>Momento Ideal de Colheita</strong>
+                  <span>Orientação clara sobre colher ou aguardar mais tempo, com detalhamento técnico completo.</span>
+                </div>
+              </li>
+            </ul>
+          </div>
+
+          <div style="margin-top:24px; padding-top:16px; border-top:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; font-size:0.84rem; color:var(--text-secondary);">
+            <span>Acesso protegido e sincronizado em nuvem</span>
+            <button type="button" class="btn btn-help btn-sm" onclick="openFeedbackModal()">Falar com Suporte</button>
+          </div>
+        </div>
+
+        <div class="auth-form-box">
+          <div class="tab-switcher">
+            <button type="button" class="tab-switch-btn active" id="tabBtnLogin" onclick="toggleAuthTab('login')">Entrar</button>
+            <button type="button" class="tab-switch-btn" id="tabBtnRegister" onclick="toggleAuthTab('register')">Criar Cadastro</button>
+          </div>
+
+          <!-- Formulário de Login -->
+          <form id="formLogin" onsubmit="onLoginSubmit(event)">
+            <div class="form-field">
+              <label for="loginEmail">E-mail do Produtor</label>
+              <input type="email" id="loginEmail" class="input-control" required placeholder="produtor@agrocampo.com.br" />
+            </div>
+            <div class="form-field">
+              <label for="loginPassword">Senha</label>
+              <input type="password" id="loginPassword" class="input-control" required placeholder="Digite sua senha" />
+            </div>
+            <button type="submit" class="btn btn-primary" style="width:100%; margin-top:4px;">
+              Entrar no Sistema
+            </button>
+
+            <div style="margin-top:22px; padding-top:18px; border-top:1px solid var(--border-color); text-align:center;">
+              <p style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:10px;">
+                Deseja conhecer o sistema com safras já preenchidas?
+              </p>
+              <button type="button" class="btn btn-secondary" style="width:100%;" onclick="loginWithDemoAccount()">
+                Acessar Conta de Demonstração
+              </button>
+            </div>
+          </form>
+
+          <!-- Formulário de Cadastro -->
+          <form id="formRegister" style="display:none;" onsubmit="onRegisterSubmit(event)">
+            <div class="form-field">
+              <label for="regName">Nome do Produtor / Propriedade</label>
+              <input type="text" id="regName" class="input-control" required placeholder="Ex: João Silva — Fazenda Boa Vista" />
+            </div>
+            <div class="form-field">
+              <label for="regEmail">E-mail</label>
+              <input type="email" id="regEmail" class="input-control" required placeholder="seuemail@exemplo.com.br" />
+            </div>
+            <div class="form-field">
+              <label for="regPassword">Senha</label>
+              <input type="password" id="regPassword" class="input-control" required minlength="4" placeholder="Mínimo de 4 caracteres" />
+            </div>
+            <button type="submit" class="btn btn-primary" style="width:100%; margin-top:4px;">
+              Criar Conta e Acessar
+            </button>
+          </form>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- ========================================================================
+       AMBIENTE DO PRODUTOR LOGADO (100% CLARO, LIMPO E ORGANIZADO)
+       ======================================================================== -->
+  <div class="app-layout" id="appLayout">
+
+    <!-- Cabeçalho Superior Limpo -->
+    <header class="app-topbar">
+      <div class="topbar-inner">
+        <div class="brand">
+          <div class="brand-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/>
+              <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>
+            </svg>
+          </div>
+          <span class="brand-name">AgroCampo</span>
+        </div>
+
+        <div class="safra-picker">
+          <label for="safraSelect">Safra Selecionada:</label>
+          <select id="safraSelect" class="safra-select" onchange="onChangeSafraSelect(this.value)"></select>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="openSection('secCultura', true)">
+            + Nova Safra
+          </button>
+        </div>
+
+        <div class="topbar-actions">
+          <span class="user-chip" id="activeProducerLabel">Produtor</span>
+          <button type="button" class="btn btn-outline btn-sm sim-offline-btn" onclick="toggleOfflineSimulation()">
+            Testar "Sem Internet"
+          </button>
+          <button type="button" class="btn btn-help btn-sm" onclick="openFeedbackModal()">
+            Feedback / Ajuda
+          </button>
+          <button type="button" class="btn btn-outline btn-sm" onclick="logoutSession()">
+            Sair
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Menu de Navegação Principal Claro -->
+    <nav class="main-nav-bar" aria-label="Menu Principal">
+      <div class="main-nav-inner">
+        <button type="button" class="nav-link active" id="nav_secRecomendacoes" onclick="openSection('secRecomendacoes')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+          <span>Recomendações e Alertas</span>
+        </button>
+        <button type="button" class="nav-link" id="nav_secCultura" onclick="openSection('secCultura')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          <span>Cadastrar Cultura</span>
+        </button>
+        <button type="button" class="nav-link" id="nav_secPlantio" onclick="openSection('secPlantio')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 17.58A5 5 0 0 0 18 8h-1.26A8 8 0 1 0 4 16.25"/><line x1="8" y1="16" x2="8.01" y2="16"/><line x1="12" y1="18" x2="12.01" y2="18"/><line x1="16" y1="16" x2="16.01" y2="16"/></svg>
+          <span>Plantio, Umidade e Clima</span>
+        </button>
+        <button type="button" class="nav-link" id="nav_secDesenvolvimento" onclick="openSection('secDesenvolvimento')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          <span>Desenvolvimento e Colheita</span>
+        </button>
+        <button type="button" class="nav-link" id="nav_secHistorico" onclick="openSection('secHistorico')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          <span>Histórico da Safra</span>
+        </button>
+      </div>
+    </nav>
+
+    <!-- Conteúdo Principal -->
+    <main class="app-content">
+
+      <!-- Barra de Progresso do Ciclo da Cultura (Cadastrada -> Em Desenvolvimento -> Colheita Concluída) -->
+      <div class="state-banner">
+        <div class="state-banner-head">
+          <strong>Etapa Atual do Ciclo da Safra</strong>
+          <span style="font-size:0.82rem; color:var(--text-secondary);">Atualizado automaticamente conforme seus registros</span>
+        </div>
+        <div class="state-steps-grid">
+          <div class="state-pill" id="stateStep1">
+            <div class="state-num">1</div>
+            <div class="state-label-group">
+              <strong>Cadastrada</strong>
+              <small>Características da cultura definidas</small>
+            </div>
+          </div>
+          <div class="state-pill" id="stateStep2">
+            <div class="state-num">2</div>
+            <div class="state-label-group">
+              <strong>Em Desenvolvimento</strong>
+              <small>Plantio, clima e evolução acompanhados</small>
+            </div>
+          </div>
+          <div class="state-pill" id="stateStep3">
+            <div class="state-num">3</div>
+            <div class="state-label-group">
+              <strong>Colheita Concluída</strong>
+              <small>Desenvolvimento atingido e safra colhida</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ====================================================================
+           SEÇÃO 1: RECOMENDAÇÕES E ALERTAS (PAINEL PRINCIPAL)
+           ==================================================================== -->
+      <section class="screen-section active" id="secRecomendacoes">
+        <div class="section-heading">
+          <div>
+            <h2 id="mainCropTitle">Safra Selecionada</h2>
+            <p id="mainCropSubtitle">Recomendações técnicas de plantio e colheita baseadas nos dados registrados.</p>
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="openSection('secPlantio')">Registrar Plantio / Clima</button>
+            <button type="button" class="btn btn-primary btn-sm" onclick="openSection('secDesenvolvimento')">Registrar Desenvolvimento</button>
+          </div>
+        </div>
+
+        <div class="summary-cards" id="summaryCardsRow"></div>
+
+        <!-- Alertas de Umidade Fora do Padrão e Riscos Climáticos (Fonte >= 16px) -->
+        <div id="alertsContainer"></div>
+
+        <!-- Recomendações de Plantio e de Colheita com Detalhamento Técnico (Fonte >= 16px) -->
+        <div class="two-col-layout" id="mainRecommendationsGrid"></div>
+      </section>
+
+      <!-- ====================================================================
+           SEÇÃO 2: CADASTRAR / CONFIGURAR CULTURA AGRÍCOLA
+           ==================================================================== -->
+      <section class="screen-section" id="secCultura">
+        <div class="section-heading">
+          <div>
+            <h2 id="cropSectionHeading">Características Fisiológicas e Tipo da Cultura</h2>
+            <p>Defina a cultura agrícola e os padrões seguros de umidade e temperatura para orientar as análises.</p>
+          </div>
+          <div style="display:flex; gap:6px; flex-wrap:wrap;">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="applyModelPreset('soja')">Preencher Soja</button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="applyModelPreset('milho')">Preencher Milho</button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="applyModelPreset('feijao')">Preencher Feijão</button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="applyModelPreset('trigo')">Preencher Trigo</button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="applyModelPreset('cafe')">Preencher Café</button>
+          </div>
+        </div>
+
+        <div class="card-box">
+          <form onsubmit="onSaveCropSubmit(event)">
+            <input type="hidden" id="cropFormMode" value="edit" />
+            <div class="grid-3">
+              <div class="form-field">
+                <label for="cropSafraName">Nome da Safra / Talhão</label>
+                <input type="text" id="cropSafraName" class="input-control" required />
+              </div>
+              <div class="form-field">
+                <label for="cropSpecies">Tipo Específico da Cultura Agrícola</label>
+                <input type="text" id="cropSpecies" class="input-control" required />
+              </div>
+              <div class="form-field">
+                <label for="cropCycleDays">Período Médio de Desenvolvimento (dias)</label>
+                <input type="number" id="cropCycleDays" class="input-control" required min="25" max="730" />
+              </div>
+            </div>
+
+            <div class="grid-2">
+              <div class="form-field">
+                <label for="cropIdealWindow">Período Sazonal Recomendado para Plantio</label>
+                <input type="text" id="cropIdealWindow" class="input-control" required />
+              </div>
+              <div class="form-field">
+                <label for="cropWaterTolerance">Sensibilidade Fisiológica à Umidade e Clima</label>
+                <select id="cropWaterTolerance" class="input-control" required>
+                  <option value="Alta exigência hídrica na germinação e no enchimento de grãos">Alta exigência hídrica na germinação e no enchimento de grãos</option>
+                  <option value="Alta exigência hídrica no pendoamento e espigamento">Alta exigência hídrica no pendoamento e espigamento</option>
+                  <option value="Exigência moderada com boa tolerância a estiagens curtas">Exigência moderada com boa tolerância a estiagens curtas</option>
+                  <option value="Sensível ao encharcamento prolongado e a geadas">Sensível ao encharcamento prolongado e a geadas</option>
+                  <option value="Sensível ao encharcamento prolongado e geadas na floração">Sensível ao encharcamento prolongado e geadas na floração</option>
+                </select>
+              </div>
+            </div>
+
+            <h3 style="font-size:0.96rem; color:var(--primary); margin:10px 0 14px;">Padrões Seguros de Umidade (%) por Fase e Limites de Temperatura (°C)</h3>
+            <div class="grid-4">
+              <div class="form-field">
+                <label for="cropMoistPlantMin">Umidade Mín. Plantio (%)</label>
+                <input type="number" id="cropMoistPlantMin" class="input-control" required min="10" max="95" />
+              </div>
+              <div class="form-field">
+                <label for="cropMoistPlantMax">Umidade Máx. Plantio (%)</label>
+                <input type="number" id="cropMoistPlantMax" class="input-control" required min="15" max="100" />
+              </div>
+              <div class="form-field">
+                <label for="cropMoistDevMin">Umidade Mín. Desenv. (%)</label>
+                <input type="number" id="cropMoistDevMin" class="input-control" required min="10" max="95" />
+              </div>
+              <div class="form-field">
+                <label for="cropMoistDevMax">Umidade Máx. Desenv. (%)</label>
+                <input type="number" id="cropMoistDevMax" class="input-control" required min="15" max="100" />
+              </div>
+            </div>
+
+            <div class="grid-4">
+              <div class="form-field">
+                <label for="cropMoistHarvMin">Umidade Mín. Colheita (%)</label>
+                <input type="number" id="cropMoistHarvMin" class="input-control" required min="10" max="90" />
+              </div>
+              <div class="form-field">
+                <label for="cropMoistHarvMax">Umidade Máx. Colheita (%)</label>
+                <input type="number" id="cropMoistHarvMax" class="input-control" required min="15" max="95" />
+              </div>
+              <div class="form-field">
+                <label for="cropTempMin">Temperatura Mínima (°C)</label>
+                <input type="number" id="cropTempMin" class="input-control" required min="-5" max="45" />
+              </div>
+              <div class="form-field">
+                <label for="cropTempMax">Temperatura Máxima (°C)</label>
+                <input type="number" id="cropTempMax" class="input-control" required min="5" max="55" />
+              </div>
+            </div>
+
+            <div class="form-field">
+              <label for="cropPhysiologyNotes">Características Fisiológicas e Observações da Cultura</label>
+              <textarea id="cropPhysiologyNotes" class="input-control" rows="2" required></textarea>
+            </div>
+
+            <div style="display:flex; justify-content:flex-end; gap:10px;">
+              <button type="button" class="btn btn-outline" onclick="openSection('secRecomendacoes')">Cancelar</button>
+              <button type="submit" class="btn btn-primary">Salvar Características da Cultura</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- ====================================================================
+           SEÇÃO 3: REGISTRAR PLANTIO, UMIDADE E CONDIÇÕES CLIMÁTICAS
+           ==================================================================== -->
+      <section class="screen-section" id="secPlantio">
+        <div class="section-heading">
+          <div>
+            <h2>Registrar Plantio, Umidade e Condições Climáticas</h2>
+            <p>Insira a data exata do plantio, a umidade medida na área e as condições climáticas atuais do local de produção.</p>
+          </div>
+        </div>
+
+        <div class="two-col-layout">
+          <div class="card-box">
+            <div class="card-box-header">
+              <h3>Dados de Plantio e Ambiente</h3>
+            </div>
+            <form onsubmit="onSavePlantingClimateSubmit(event)">
+              <div class="form-field">
+                <label for="inputPlantingDate">Data Exata de Realização do Plantio</label>
+                <input type="date" id="inputPlantingDate" class="input-control" required />
+              </div>
+
+              <div class="grid-2">
+                <div class="form-field">
+                  <label for="inputPlantingMoisture">Nível de Umidade Medido na Área (%)</label>
+                  <input type="number" id="inputPlantingMoisture" class="input-control" required min="0" max="100" step="0.5" placeholder="Ex: 68" />
+                </div>
+                <div class="form-field">
+                  <label for="inputPlantingTemp">Temperatura Observada no Local (°C)</label>
+                  <input type="number" id="inputPlantingTemp" class="input-control" required min="-10" max="55" step="0.5" placeholder="Ex: 25" />
+                </div>
+              </div>
+
+              <div class="grid-2">
+                <div class="form-field">
+                  <label for="inputPlantingRain">Chuva / Precipitação Observada (mm)</label>
+                  <input type="number" id="inputPlantingRain" class="input-control" required min="0" max="500" step="1" placeholder="Ex: 25" />
+                </div>
+                <div class="form-field">
+                  <label for="inputPlantingWeather">Condições Climáticas Atuais no Local</label>
+                  <select id="inputPlantingWeather" class="input-control" required>
+                    <option value="Sol com chuvas regulares bem distribuídas">Sol com chuvas regulares bem distribuídas</option>
+                    <option value="Parcialmente nublado e ameno">Parcialmente nublado e ameno</option>
+                    <option value="Estiagem prolongada / Solo seco">Estiagem prolongada / Solo seco</option>
+                    <option value="Chuva intensa contínua / Excesso hídrico">Chuva intensa contínua / Excesso hídrico</option>
+                    <option value="Calor extremo com baixa umidade relativa">Calor extremo com baixa umidade relativa</option>
+                    <option value="Frente fria severa / Risco de geada">Frente fria severa / Risco de geada</option>
+                    <option value="Ventos fortes acima de 50 km/h">Ventos fortes acima de 50 km/h</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-field">
+                <label for="inputPlantingNotes">Observações da Área de Produção</label>
+                <input type="text" id="inputPlantingNotes" class="input-control" placeholder="Ex: Solo bem preparado e com boa umidade superficial" />
+              </div>
+
+              <button type="submit" class="btn btn-primary" style="width:100%;">
+                Salvar Registro e Calcular Período Mais Adequado
+              </button>
+            </form>
+          </div>
+
+          <div class="card-box">
+            <div class="card-box-header">
+              <h3>Recomendação de Plantio Gerada</h3>
+            </div>
+            <div id="plantingPreviewArea"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====================================================================
+           SEÇÃO 4: DESENVOLVIMENTO DA PLANTA, DECISÃO PRÁTICA E COLHEITA
+           ==================================================================== -->
+      <section class="screen-section" id="secDesenvolvimento">
+        <div class="section-heading">
+          <div>
+            <h2>Acompanhamento do Ciclo, Decisão Prática e Colheita</h2>
+            <p>Registre a evolução da planta ao longo do ciclo, anote sua decisão prática ou conclua a etapa de colheita.</p>
+          </div>
+        </div>
+
+        <div class="tab-switcher" style="max-width:760px;">
+          <button type="button" class="tab-switch-btn active" id="subTabBtn_dev" onclick="switchCycleSubTab('dev')">
+            1. Status de Desenvolvimento
+          </button>
+          <button type="button" class="tab-switch-btn" id="subTabBtn_decision" onclick="switchCycleSubTab('decision')">
+            2. Decisão Tomada na Prática
+          </button>
+        </div>
+
+        <div style="margin-bottom:18px;">
+          <button type="button" class="btn btn-secondary btn-sm" id="subTabBtn_harvest" onclick="switchCycleSubTab('harvest')">
+            Ir para Conclusão Final da Etapa de Colheita
+          </button>
+        </div>
+
+        <!-- Sub-painel 1: Status de Desenvolvimento -->
+        <div id="subTabPane_dev">
+          <div class="two-col-layout">
+            <div class="card-box">
+              <div class="card-box-header">
+                <h3>Registrar Status de Desenvolvimento da Planta</h3>
+              </div>
+              <form onsubmit="onSaveDevelopmentSubmit(event)">
+                <label style="display:block; font-size:0.9rem; font-weight:600; margin-bottom:8px;">Fase Atual de Desenvolvimento:</label>
+                <div class="stage-selector">
+                  <button type="button" class="stage-btn" onclick="choosePhenologicalStage('Germinação e Emergência', 15, this)">
+                    <strong>Germinação</strong>
+                    <span>~15%</span>
+                  </button>
+                  <button type="button" class="stage-btn" onclick="choosePhenologicalStage('Desenvolvimento Vegetativo', 40, this)">
+                    <strong>Vegetativo</strong>
+                    <span>~40%</span>
+                  </button>
+                  <button type="button" class="stage-btn" onclick="choosePhenologicalStage('Floração Plena', 60, this)">
+                    <strong>Floração</strong>
+                    <span>~60%</span>
+                  </button>
+                  <button type="button" class="stage-btn active" onclick="choosePhenologicalStage('Enchimento de Grãos / Frutificação', 75, this)">
+                    <strong>Enchimento</strong>
+                    <span>~75%</span>
+                  </button>
+                  <button type="button" class="stage-btn" onclick="choosePhenologicalStage('Maturação Fisiológica (Ponto de Colheita)', 98, this)">
+                    <strong>Maturação</strong>
+                    <span>~98%</span>
+                  </button>
+                </div>
+
+                <input type="hidden" id="inputDevStage" value="Enchimento de Grãos / Frutificação" />
+
+                <div class="grid-2">
+                  <div class="form-field">
+                    <label for="inputDevDate">Data do Registro</label>
+                    <input type="date" id="inputDevDate" class="input-control" required />
+                  </div>
+                  <div class="form-field">
+                    <label for="inputDevProgress">
+                      Progresso do Período de Desenvolvimento: <strong id="devProgressDisplay" style="color:var(--primary);">75%</strong>
+                    </label>
+                    <input type="range" id="inputDevProgress" min="5" max="100" value="75" style="width:100%; margin-top:8px;" oninput="document.getElementById('devProgressDisplay').textContent = this.value + '%'" />
+                    <div class="field-note">Abaixo de 95% o sistema alerta para aguardar mais tempo antes da colheita.</div>
+                  </div>
+                </div>
+
+                <div class="grid-2">
+                  <div class="form-field">
+                    <label for="inputDevMoisture">Umidade Medida na Área (%)</label>
+                    <input type="number" id="inputDevMoisture" class="input-control" required min="0" max="100" step="0.5" placeholder="Ex: 64" />
+                  </div>
+                  <div class="form-field">
+                    <label for="inputDevTemp">Temperatura Local (°C)</label>
+                    <input type="number" id="inputDevTemp" class="input-control" required min="-10" max="55" step="0.5" placeholder="Ex: 26" />
+                  </div>
+                </div>
+
+                <div class="form-field">
+                  <label for="inputDevWeather">Condição Climática Observada</label>
+                  <select id="inputDevWeather" class="input-control" required>
+                    <option value="Sol com chuvas regulares bem distribuídas">Sol com chuvas regulares bem distribuídas</option>
+                    <option value="Parcialmente nublado e ameno">Parcialmente nublado e ameno</option>
+                    <option value="Tempo firme e seco (Favorável à maturação/colheita)">Tempo firme e seco (Favorável à maturação/colheita)</option>
+                    <option value="Estiagem prolongada / Solo seco">Estiagem prolongada / Solo seco</option>
+                    <option value="Chuva intensa contínua / Excesso hídrico">Chuva intensa contínua / Excesso hídrico</option>
+                    <option value="Calor extremo com baixa umidade relativa">Calor extremo com baixa umidade relativa</option>
+                    <option value="Frente fria severa / Risco de geada">Frente fria severa / Risco de geada</option>
+                  </select>
+                </div>
+
+                <div class="form-field">
+                  <label for="inputDevNotes">Observações sobre o Desenvolvimento da Planta</label>
+                  <textarea id="inputDevNotes" class="input-control" rows="2" required placeholder="Anote observações sobre o vigor, formação de vagens/espigas e sanidade..."></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width:100%;">
+                  Salvar Desenvolvimento e Calcular Momento Ideal da Colheita
+                </button>
+              </form>
+            </div>
+
+            <div class="card-box">
+              <div class="card-box-header">
+                <h3>Análise de Colheita e Maturação</h3>
+              </div>
+              <div id="developmentPreviewArea"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sub-painel 2: Decisão Tomada na Prática pelo Produtor -->
+        <div id="subTabPane_decision" style="display:none;">
+          <div class="card-box" style="max-width:720px;">
+            <div class="card-box-header">
+              <h3>Registrar Decisão Tomada e Executada na Prática</h3>
+            </div>
+            <p style="font-size:0.93rem; color:var(--text-secondary); margin-bottom:16px;">
+              Registre qual decisão você efetivamente tomou no campo, independentemente de ter seguido ou não a recomendação fornecida pelo sistema.
+            </p>
+            <form onsubmit="onSaveDecisionSubmit(event)">
+              <div class="grid-2">
+                <div class="form-field">
+                  <label for="inputDecisionDate">Data da Decisão</label>
+                  <input type="date" id="inputDecisionDate" class="input-control" required />
+                </div>
+                <div class="form-field">
+                  <label for="inputDecisionAdherence">Relação com a Recomendação do Sistema</label>
+                  <select id="inputDecisionAdherence" class="input-control" required>
+                    <option value="Seguiu a recomendação do sistema">Seguiu a recomendação do sistema</option>
+                    <option value="Seguiu parcialmente com ajustes no manejo">Seguiu parcialmente com ajustes no manejo</option>
+                    <option value="Não seguiu a recomendação (Decisão própria do produtor)">Não seguiu a recomendação (Decisão própria do produtor)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-field">
+                <label for="inputDecisionAction">Decisão Executada na Prática</label>
+                <input type="text" id="inputDecisionAction" class="input-control" required placeholder="Ex: Aguardou mais 12 dias para realizar a colheita" />
+              </div>
+
+              <div class="form-field">
+                <label for="inputDecisionNotes">Motivo / Observações Práticas do Produtor</label>
+                <textarea id="inputDecisionNotes" class="input-control" rows="3" required placeholder="Descreva os motivos práticos que levaram a essa decisão..."></textarea>
+              </div>
+
+              <button type="submit" class="btn btn-primary">Salvar Decisão Prática</button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Sub-painel 3: Conclusão Final da Etapa de Colheita -->
+        <div id="subTabPane_harvest" style="display:none;">
+          <div class="card-box" style="max-width:720px;">
+            <div class="card-box-header">
+              <h3>Registrar Conclusão da Etapa de Colheita</h3>
+            </div>
+            <p style="font-size:0.93rem; color:var(--text-secondary); margin-bottom:16px;">
+              Informe a data de conclusão e as informações finais da colheita para consolidar o encerramento da safra.
+            </p>
+            <form onsubmit="onSaveHarvestConclusionSubmit(event)">
+              <div class="grid-2">
+                <div class="form-field">
+                  <label for="inputHarvestDate">Data de Conclusão da Colheita</label>
+                  <input type="date" id="inputHarvestDate" class="input-control" required />
+                </div>
+                <div class="form-field">
+                  <label for="inputHarvestYield">Produtividade Obtida (sacas/ha ou t/ha)</label>
+                  <input type="text" id="inputHarvestYield" class="input-control" required placeholder="Ex: 68 sacas/ha" />
+                </div>
+              </div>
+
+              <div class="grid-2">
+                <div class="form-field">
+                  <label for="inputHarvestMoisture">Umidade Final na Colheita (%)</label>
+                  <input type="number" id="inputHarvestMoisture" class="input-control" required min="5" max="90" step="0.5" placeholder="Ex: 14.0" />
+                </div>
+                <div class="form-field">
+                  <label for="inputHarvestQuality">Qualidade Final da Produção</label>
+                  <select id="inputHarvestQuality" class="input-control" required>
+                    <option value="Excelente — Grãos sadios e dentro do padrão ideal">Excelente — Grãos sadios e dentro do padrão ideal</option>
+                    <option value="Boa — Baixo índice de perdas">Boa — Baixo índice de perdas</option>
+                    <option value="Regular — Impacto moderado de fatores climáticos">Regular — Impacto moderado de fatores climáticos</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-field">
+                <label for="inputHarvestNotes">Informações Finais de Conclusão da Colheita</label>
+                <textarea id="inputHarvestNotes" class="input-control" rows="3" required placeholder="Observações finais sobre o fechamento da colheita..."></textarea>
+              </div>
+
+              <button type="submit" class="btn btn-primary">Salvar Conclusão da Colheita</button>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====================================================================
+           SEÇÃO 5: HISTÓRICO CONSOLIDADO DA SAFRA E CORREÇÃO DE REGISTROS
+           ==================================================================== -->
+      <section class="screen-section" id="secHistorico">
+        <div class="section-heading">
+          <div>
+            <h2>Histórico Consolidado da Safra</h2>
+            <p>Consulte todos os registros de plantio, desenvolvimento, decisões e colheita. Caso haja erro de digitação, altere ou exclua o registro.</p>
+          </div>
+        </div>
+
+        <div class="card-box">
+          <div class="card-box-header">
+            <div style="display:flex; gap:10px; flex-wrap:wrap; flex:1;">
+              <select id="filterHistoryCategory" class="input-control" style="max-width:250px;" onchange="renderHistoryScreen()">
+                <option value="all">Todos os registros da safra</option>
+                <option value="plantio_clima">Plantio, Umidade e Clima</option>
+                <option value="desenvolvimento">Desenvolvimento da Planta</option>
+                <option value="decisao">Decisões Tomadas na Prática</option>
+                <option value="colheita">Conclusão da Colheita</option>
+              </select>
+              <input type="search" id="searchHistoryInput" class="input-control" style="max-width:280px;" placeholder="Buscar nos registros..." oninput="renderHistoryScreen()" />
+            </div>
+          </div>
+
+          <div class="table-container">
+            <table class="clean-table">
+              <thead>
+                <tr>
+                  <th>Data</th>
+                  <th>Etapa</th>
+                  <th>Dados Registrados</th>
+                  <th>Observações</th>
+                  <th style="text-align:right;">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="historyTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ========================================================================
+       MODAL DE ALTERAÇÃO DE REGISTRO DA SAFRA (FLUXO DE 3 PASSOS)
+       ======================================================================== -->
+  <div class="modal-backdrop" id="modalEditRecord" role="dialog" aria-modal="true">
+    <div class="modal-window">
+      <div class="modal-header">
+        <h3>Alterar Registro da Safra</h3>
+        <button type="button" class="modal-close-btn" onclick="closeEditModal()">&times;</button>
+      </div>
+
+      <div class="steps-indicator">
+        <div class="step-tag">1. Selecionar Registro</div>
+        <div class="step-tag">2. Alterar o Dado</div>
+        <div class="step-tag">3. Salvar Alteração</div>
+      </div>
+
+      <form onsubmit="onConfirmEditRecordSubmit(event)">
+        <input type="hidden" id="editRecordId" />
+        <div class="form-field">
+          <label for="editRecordDate">Data do Registro</label>
+          <input type="date" id="editRecordDate" class="input-control" required />
+        </div>
+
+        <div id="editDynamicFieldsBox"></div>
+
+        <div class="form-field">
+          <label for="editRecordNotes">Observações</label>
+          <textarea id="editRecordNotes" class="input-control" rows="3" required></textarea>
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:16px;">
+          <button type="button" class="btn btn-outline" onclick="closeEditModal()">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Salvar Alteração</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       MODAL DE FEEDBACK / AJUDA (WHATSAPP E E-MAIL DA EQUIPE)
+       ======================================================================== -->
+  <div class="modal-backdrop" id="modalFeedback" role="dialog" aria-modal="true">
+    <div class="modal-window">
+      <div class="modal-header">
+        <h3>Feedback e Ajuda ao Produtor</h3>
+        <button type="button" class="modal-close-btn" onclick="closeFeedbackModal()">&times;</button>
+      </div>
+      <p style="font-size:0.94rem; color:var(--text-secondary); margin-bottom:16px;">
+        Precisa relatar algum problema ou tirar dúvidas com nossa equipe? Escolha abaixo se prefere enviar por <strong>WhatsApp</strong> ou <strong>E-mail</strong>.
+      </p>
+
+      <div class="form-field">
+        <label for="feedbackSubject">Assunto</label>
+        <select id="feedbackSubject" class="input-control">
+          <option value="Relato de Problema no Sistema">Relato de Problema no Sistema</option>
+          <option value="Dúvida sobre Recomendação">Dúvida sobre Recomendação</option>
+          <option value="Sugestão de Melhoria">Sugestão de Melhoria</option>
+        </select>
+      </div>
+
+      <div class="form-field">
+        <label for="feedbackText">Mensagem (Opcional)</label>
+        <textarea id="feedbackText" class="input-control" rows="3" placeholder="Escreva brevemente sua mensagem..."></textarea>
+      </div>
+
+      <div class="grid-2" style="margin-top:16px;">
+        <button type="button" class="btn btn-primary" onclick="dispatchFeedback('whatsapp')">
+          Falar pelo WhatsApp
+        </button>
+        <button type="button" class="btn btn-secondary" onclick="dispatchFeedback('email')">
+          Enviar por E-mail
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Área de Notificações -->
+  <div class="toast-area" id="toastArea"></div>
+
+  <!-- Scripts HTML/JS Puros -->
+  <script src="js/storage.js"></script>
+  <script src="js/agronomy.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
